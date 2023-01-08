@@ -3,10 +3,10 @@ import com.sqi.beanutil.annotation.SqiBeanMappings;
 import com.sqi.beanutil.annotation.SqiParameter;
 
 public interface MyProcessorTest {
-    @SqiBeanMappings(mappings = {
-            @SqiBeanMapping()
-    })
-    void nonPara();
+//    @SqiBeanMappings(mappings = {
+//            @SqiBeanMapping()
+//    })
+//    void nonPara();
 
     @SqiBeanMappings(mappings = {
             @SqiBeanMapping(source = "SOURCE", target = "TARGET")
