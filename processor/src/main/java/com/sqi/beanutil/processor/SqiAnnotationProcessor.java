@@ -1,10 +1,9 @@
 package com.sqi.beanutil.processor;
 
 import com.google.auto.service.AutoService;
-import com.sqi.beanutil.annotation.SqiBeanMapping;
 import com.sqi.beanutil.annotation.SqiBeanMappings;
-import com.sqi.beanutil.generator.CodeGenerator;
-import com.sqi.beanutil.generator.MappingInfo;
+import com.sqi.beanutil.generator.*;
+import com.sun.tools.javac.code.Symbol;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -15,11 +14,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @AutoService(Processor.class)
 public class SqiAnnotationProcessor extends AbstractProcessor {
@@ -30,8 +27,6 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Filer filer;
     private Messager messager;
-    private Map<String, SqiBeanMappingsGroupedClasses> factoryClasses =
-            new LinkedHashMap<String, SqiBeanMappingsGroupedClasses>();
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -46,7 +41,7 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> annotations = new LinkedHashSet<String>();
         annotations.add(SqiBeanMappings.class.getCanonicalName());
-        annotations.add(SqiBeanMapping.class.getCanonicalName());
+//        annotations.add(SqiBeanMapping.class.getCanonicalName());
         return annotations;
     }
 
@@ -78,39 +73,15 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
                 System.out.println(annotatedElement.getClass());
 //                com.sun.tools.javac.code.Symbol.MethodSymbol
                 ExecutableElement methodElement = (ExecutableElement) annotatedElement;
-                System.out.println("methodElement: " + methodElement);
-
-//                SqiBeanMappingsAnnotatedClass annotatedClass = new SqiBeanMappingsAnnotatedClass(typeElement);
-//
-////                checkValidClass(annotatedClass);
-//
-//                // Everything is fine, so try to add
-//                SqiBeanMappingsGroupedClasses factoryClass =
-//                        factoryClasses.get(annotatedClass.getQualifiedFactoryGroupName());
-//                if (factoryClass == null) {
-//                    String qualifiedGroupName = annotatedClass.getQualifiedFactoryGroupName();
-//                    factoryClass = new SqiBeanMappingsGroupedClasses(qualifiedGroupName);
-//                    factoryClasses.put(qualifiedGroupName, factoryClass);
-//                }
-//
-//                // Checks if id is conflicting with another @Factory annotated class with the same id
-//                factoryClass.add(annotatedClass);
+                MappingInfo mappingInfo = create(methodElement);
+                CodeGenerator.generate(mappingInfo);
             }
 
-            // Generate code
-            for (SqiBeanMappingsGroupedClasses factoryClass : factoryClasses.values()) {
-//                factoryClass.generateCode(elementUtils, filer);
-            }
-            factoryClasses.clear();
         } catch (ProcessingException e) {
             e.printStackTrace();
             error(e.getElement(), e.getMessage());
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            error(null, e.getMessage());
         }
-        MappingInfo mappingInfo = create();
-        CodeGenerator.generate(mappingInfo);
+
         return true;
     }
     /**
@@ -123,9 +94,37 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
         messager.printMessage(Diagnostic.Kind.ERROR, msg, e);
     }
 
-    private MappingInfo create() {
-        MappingInfo mappingInfo = null; // new MappingInfo();
+    private MappingInfo create(ExecutableElement methodElement) {
+        Symbol.MethodSymbol method = (Symbol.MethodSymbol)methodElement;
 
+        SqiBeanMappings mappings = methodElement.getAnnotation(SqiBeanMappings.class);
+        List<Mapping> mappingList = Arrays.stream(mappings.mappings())
+                .map(mappingAnno -> {
+                    String sourceFieldName = mappingAnno.source();
+                    Class sourceFieldType = mappingAnno.sourceType();
+                    String targetFieldName = mappingAnno.target();
+                    Class targetFieldType = mappingAnno.targetType();
+                    Class<? extends Function> convertProviderClass =  mappingAnno.convertProvider();
+                    Class<? extends Function> formatClass =  mappingAnno.format();
+                    return new Mapping(sourceFieldName, sourceFieldType, targetFieldName, targetFieldType, convertProviderClass, formatClass);
+                }).collect(Collectors.toList());
+
+
+        String interfaceName = method.owner.getQualifiedName().toString();
+        Boolean withSameName = true;
+
+        String methodName = method.getQualifiedName().toString();
+        Class returnType = method.getReturnType().getClass();
+        List<ParameterInfo> parameterInfo = method.getParameters().stream()
+                .map(varSymbol -> {
+                    String type = varSymbol.type.toString();
+                    String name = varSymbol.getQualifiedName().toString();
+                    return new ParameterInfo(name, type);
+                }).collect(Collectors.toList());
+
+        MethodInfo methodInfo = new MethodInfo(methodName, returnType, parameterInfo);
+
+        MappingInfo mappingInfo =  new MappingInfo(interfaceName, methodInfo, withSameName, mappingList);
         return mappingInfo;
     }
 }
