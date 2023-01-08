@@ -3,6 +3,8 @@ package com.sqi.beanutil.processor;
 import com.google.auto.service.AutoService;
 import com.sqi.beanutil.annotation.SqiBeanMapping;
 import com.sqi.beanutil.annotation.SqiBeanMappings;
+import com.sqi.beanutil.generator.CodeGenerator;
+import com.sqi.beanutil.generator.MappingInfo;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -107,7 +109,8 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
 //            e.printStackTrace();
 //            error(null, e.getMessage());
         }
-
+        MappingInfo mappingInfo = create();
+        CodeGenerator.generate(mappingInfo);
         return true;
     }
     /**
@@ -118,5 +121,11 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
      */
     public void error(Element e, String msg) {
         messager.printMessage(Diagnostic.Kind.ERROR, msg, e);
+    }
+
+    private MappingInfo create() {
+        MappingInfo mappingInfo = null; // new MappingInfo();
+
+        return mappingInfo;
     }
 }
