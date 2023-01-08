@@ -9,4 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.CLASS)
 public @interface SqiParameter {
     String name();
+
+    Class<?> type() default Void.class;
 }

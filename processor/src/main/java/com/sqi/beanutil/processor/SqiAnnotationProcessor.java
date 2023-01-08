@@ -3,6 +3,8 @@ package com.sqi.beanutil.processor;
 import com.google.auto.service.AutoService;
 import com.sqi.beanutil.annotation.SqiBeanMapping;
 import com.sqi.beanutil.annotation.SqiBeanMappings;
+import com.sqi.beanutil.generator.CodeGenerator;
+import com.sqi.beanutil.generator.MappingInfo;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -39,6 +41,14 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         System.out.println("SQI.PROCESSOR--->" + getSupportedAnnotationTypes());
+        MappingInfo mappingInfo = create();
+        CodeGenerator.generate(mappingInfo);
         return true;
+    }
+
+    private MappingInfo create() {
+        MappingInfo mappingInfo = null; // new MappingInfo();
+
+        return mappingInfo;
     }
 }

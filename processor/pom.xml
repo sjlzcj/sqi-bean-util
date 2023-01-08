@@ -24,6 +24,10 @@
             <artifactId>annotation</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.sqi.beanutil</groupId>
+            <artifactId>code-generator</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.auto.service</groupId>
             <artifactId>auto-service</artifactId>
             <version>1.0.1</version>
