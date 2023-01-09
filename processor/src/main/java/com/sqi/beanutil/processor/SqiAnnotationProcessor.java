@@ -80,6 +80,8 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
         } catch (ProcessingException e) {
             e.printStackTrace();
             error(e.getElement(), e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return true;
@@ -106,7 +108,7 @@ public class SqiAnnotationProcessor extends AbstractProcessor {
                     Class targetFieldType = mappingAnno.targetType();
                     Class<? extends Function> convertProviderClass =  mappingAnno.convertProvider();
                     Class<? extends Function> formatClass =  mappingAnno.format();
-                    return new Mapping(sourceFieldName, sourceFieldType, targetFieldName, targetFieldType, convertProviderClass, formatClass);
+                    return new Mapping(sourceFieldName, sourceFieldType, targetFieldName, targetFieldType, null, null);
                 }).collect(Collectors.toList());
 
 
