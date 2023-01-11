@@ -13,7 +13,6 @@
         <module>annotation</module>
         <module>processor-test</module>
         <module>code-generator</module>
-        <module>dynamic-rollback</module>
     </modules>
 
     <properties>
